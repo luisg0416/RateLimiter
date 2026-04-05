@@ -1,0 +1,100 @@
+# docker-compose.yml
+# Defines the local development environment as a set of services.
+# Running "docker-compose up" spins up both the API and Redis
+# together in an isolated network, wired to each other automatically.
+# Reference: https://docs.docker.com/compose/compose-file/
+
+# The compose spec no longer requires a "version" field as of
+# Docker Compose v2. If you see deprecation warnings about it, ignore them.
+
+services:
+
+  # ----------------------------------------------------------
+  # Redis
+  # The official Redis image from Docker Hub.
+  # This is our cache and state store for all rate limit data.
+  # Reference: https://hub.docker.com/_/redis
+  # ----------------------------------------------------------
+  redis:
+    image: redis:7.2-alpine
+
+    # "alpine" is a minimal Linux distro — keeps the image small.
+    # 7.2 is the latest stable Redis version at time of writing.
+
+    container_name: ratelimiter-redis
+
+    ports:
+      # Map container port 6379 to host port 6379.
+      # This lets you connect to Redis from outside Docker too
+      # (e.g. with RedisInsight or redis-cli on your machine).
+      - "6379:6379"
+
+    volumes:
+      # Persist Redis data to a local folder so it survives
+      # container restarts. Without this, all data is lost
+      # every time the container stops.
+      - redis-data:/data
+
+    command: redis-server --appendonly yes
+    # --appendonly yes enables AOF (Append Only File) persistence.
+    # Redis writes every command to a log file so data can be
+    # recovered after a restart.
+    # Reference: https://redis.io/docs/management/persistence/
+
+    healthcheck:
+      # Docker will ping Redis every 5 seconds using redis-cli.
+      # The API container won't start until this passes.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ----------------------------------------------------------
+  # API
+  # Builds the RateLimiter.Api project using our Dockerfile
+  # and runs it as a container alongside Redis.
+  # ----------------------------------------------------------
+  api:
+    build:
+      context: .
+      # context: . means Docker uses the project root as the
+      # build context — this is important because our Dockerfile
+      # references paths like src/RateLimiter.Api/
+
+      dockerfile: src/RateLimiter.Api/Dockerfile
+
+    container_name: ratelimiter-api
+
+    ports:
+      # Map container port 8080 to host port 8080.
+      # After docker-compose up, the API is at http://localhost:8080
+      - "8080:8080"
+
+    environment:
+      # Override appsettings.json values with environment variables.
+      # ASP.NET Core maps "Redis__ConnectionString" to
+      # the "Redis:ConnectionString" config key automatically.
+      # Double underscore (__) = colon (:) in config key hierarchy.
+      # Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration
+
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Redis__ConnectionString=redis:6379
+      # "redis" here is the service name above — Docker Compose
+      # automatically creates DNS entries for each service name
+      # so containers can find each other by name.
+
+    depends_on:
+      redis:
+        condition: service_healthy
+        # "service_healthy" means the API won't start until
+        # Redis passes its healthcheck above. Without this the
+        # API might try to connect before Redis is ready.
+
+# ----------------------------------------------------------
+# Named volumes
+# Declared here so Docker manages them as persistent storage.
+# Data survives container restarts but lives outside the
+# container filesystem.
+# ----------------------------------------------------------
+volumes:
+  redis-data:
