@@ -5,7 +5,6 @@ namespace RateLimiter.Api.Controllers;
 
 public record RateLimitCheckRequest(
     string ClientId,
-
     int? Limit = null,
     int? WindowSeconds = null
 );

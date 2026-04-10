@@ -81,10 +81,7 @@ public class SlidingWindowService
     /// Window size in seconds. If null, falls back to DefaultWindowSeconds.
     /// </param>
     /// 
-    public async Task<RateLimitResult> CheckAsync(
-        string clientId,
-        int?   limit         = null,
-        int?   windowSeconds = null)
+    public async Task<RateLimitResult> CheckAsync(string clientId, int?limit= null, int?windowSeconds=null)
     {
         
         var effectiveLimit   = limit         ?? _options.DefaultLimit;
