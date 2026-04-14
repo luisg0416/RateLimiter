@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using RateLimiter.Api.Services;
+using RateLimiter.Api.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace RateLimiter.Api.Controllers;
 
 public record RateLimitCheckRequest(
     string ClientId,
     int? Limit = null,
-    int? WindowSeconds = null
+    int? WindowSeconds = null,
+    double? RefillRatePerSecond = null
 );
 
 public record RateLimitCheckResponse(
@@ -22,14 +25,19 @@ public record RateLimitCheckResponse(
 public class RateLimitController : ControllerBase
 {
     private readonly SlidingWindowService _slidingWindow;
+    private readonly TokenBucketService _tokenBucket;
+    private readonly ClientConfigService _clientConfig;
     private readonly ILogger<RateLimitController> _logger;
+    private readonly RateLimitOptions _options;
 
     public RateLimitController(
-        SlidingWindowService slidingWindow,
-        ILogger<RateLimitController> logger)
+        SlidingWindowService slidingWindow, TokenBucketService tokenBucket, ClientConfigService clientConfig, ILogger<RateLimitController> logger, IOptions<RateLimitOptions> options)
     {
         _slidingWindow = slidingWindow;
-        _logger        = logger;
+        _tokenBucket = tokenBucket;
+        _clientConfig = clientConfig;
+        _logger = logger;
+        _options = options.Value;
     }
 
     [HttpPost("check")]
@@ -38,16 +46,38 @@ public class RateLimitController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Check([FromBody] RateLimitCheckRequest request)
     {
+
         if (string.IsNullOrWhiteSpace(request.ClientId))
         {
             return BadRequest(new { error = "ClientId is required." });
         }
 
-        var result = await _slidingWindow.CheckAsync(
-            request.ClientId,
-            request.Limit,
-            request.WindowSeconds
-        );
+        var config = await _clientConfig.GetAsync(request.ClientId);
+
+        if (config is not null && !config.IsEnabled)
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests);
+        }
+
+        var algorithm = config?.Algorithm ?? _options.Algorithm;
+
+        RateLimitResult result;
+
+        if (algorithm == "SlidingWindow")
+        {
+            result = await _slidingWindow.CheckAsync(request.ClientId, config?.Limit ?? request.Limit, config?.WindowSeconds ?? request.WindowSeconds);
+        }
+
+        else if (algorithm == "TokenBucket")
+        {
+            result = await _tokenBucket.CheckAsync(request.ClientId, config?.Limit ?? request.Limit, config?.RefillRatePerSecond ?? request.RefillRatePerSecond);
+        }
+
+        else
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests);
+        }
+
 
         // Build the response body — same shape regardless of outcome.
         var response = new RateLimitCheckResponse(

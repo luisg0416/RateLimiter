@@ -65,6 +65,8 @@ builder.Services.Configure<RateLimitOptions>(
 // Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection#service-lifetimes
 // ----------------------------------------------------------------
 builder.Services.AddScoped<SlidingWindowService>();
+builder.Services.AddScoped<TokenBucketService>();
+builder.Services.AddScoped<ClientConfigService>();
 
 // ----------------------------------------------------------------
 // Standard ASP.NET Core setup — unchanged from Phase 1

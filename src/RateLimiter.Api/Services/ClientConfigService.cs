@@ -86,7 +86,7 @@ public class ClientConfigService
         }
         catch (Exception ex)
         {
-            _logger.LogError("Failed to retrieve all client configs");
+            _logger.LogError(ex, "Failed to retrieve all client configs");
 
             return Array.Empty<ClientConfig>();
         }
