@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!--
+      Tells mobile browsers not to zoom out to fit the page.
+      Without this the dashboard will render tiny on phones.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      The favicon. Vite serves anything in the public/ folder at the
+      root path. We'll add a real icon later — this just stops the
+      browser from logging a 404 in the console.
+      Reference: https://vite.dev/guide/assets.html#the-public-directory
+    -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <title>Rate Limiter Dashboard</title>
+  </head>
+  <body>
+    <!--
+      The single DOM node React mounts into.
+      ReactDOM.createRoot(document.getElementById('root')) in main.tsx
+      targets this element. Everything React renders lives inside here.
+    -->
+    <div id="root"></div>
+
+    <!--
+      This script tag is what makes Vite different from create-react-app.
+      Vite uses native ES module imports in the browser during development —
+      it serves your actual source files directly rather than bundling them
+      first. This is why the dev server starts instantly.
+      
+      type="module" is required for native ESM.
+      src="/src/main.tsx" is the application entry point.
+      
+      Reference: https://vite.dev/guide/#index-html-and-project-root
+    -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
