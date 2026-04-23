@@ -24,3 +24,12 @@ export interface RateLimitCheckResponse {
     retryAfterMs: number;
     message: string;
 }
+
+export interface HealthResponse {
+  status: string;          
+  redis: {
+    connected: boolean;
+    pingMs: number | null;
+  };
+  timestamp: string;
+}

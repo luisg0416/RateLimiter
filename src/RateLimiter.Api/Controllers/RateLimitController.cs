@@ -30,8 +30,7 @@ public class RateLimitController : ControllerBase
     private readonly ILogger<RateLimitController> _logger;
     private readonly RateLimitOptions _options;
 
-    public RateLimitController(
-        SlidingWindowService slidingWindow, TokenBucketService tokenBucket, ClientConfigService clientConfig, ILogger<RateLimitController> logger, IOptions<RateLimitOptions> options)
+    public RateLimitController(SlidingWindowService slidingWindow, TokenBucketService tokenBucket, ClientConfigService clientConfig, ILogger<RateLimitController> logger, IOptions<RateLimitOptions> options)
     {
         _slidingWindow = slidingWindow;
         _tokenBucket = tokenBucket;
