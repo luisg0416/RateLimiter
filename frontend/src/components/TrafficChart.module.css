@@ -1,0 +1,184 @@
+/* ── Card shell ─────────────────────────────────────────────────────────────── */
+
+.card {
+  background:    var(--color-surface, #0f1117);
+  border:        1px solid var(--color-border, #ffffff1a);
+  border-radius: 10px;
+  padding:       24px;
+  display:       flex;
+  flex-direction: column;
+  gap:           20px;
+}
+
+/* ── Header row ─────────────────────────────────────────────────────────────── */
+
+.header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+}
+
+.headerLeft {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+}
+
+.sectionLabel {
+  margin:          0;
+  font-family:     var(--font-mono, monospace);
+  font-size:       13px;
+  letter-spacing:  0.12em;
+  text-transform:  uppercase;
+  color:           #9ca3af;
+}
+
+.clientId {
+  margin:      0;
+  font-family: var(--font-mono, monospace);
+  font-size:   18px;
+  font-weight: 600;
+  color:       #f9fafb;
+}
+
+.headerRight {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+}
+
+/* ── Status badge ────────────────────────────────────────────────────────────── */
+/* Base styles shared by both states. Colour overrides applied via
+   .statusAllowed / .statusBlocked modifier classes. */
+
+.statusBadge {
+  font-family:    var(--font-mono, monospace);
+  font-size:      11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding:        4px 10px;
+  border-radius:  4px;
+  border:         1px solid transparent; /* overridden below */
+}
+
+.statusAllowed {
+  background: color-mix(in srgb, var(--color-allowed, #22c55e) 12%, transparent);
+  color:      var(--color-allowed, #22c55e);
+  border-color: color-mix(in srgb, var(--color-allowed, #22c55e) 30%, transparent);
+}
+
+.statusBlocked {
+  background: color-mix(in srgb, var(--color-blocked, #ef4444) 12%, transparent);
+  color:      var(--color-blocked, #ef4444);
+  border-color: color-mix(in srgb, var(--color-blocked, #ef4444) 30%, transparent);
+}
+
+/* ── Live indicator ──────────────────────────────────────────────────────────── */
+
+.liveWrapper {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+
+.liveDot {
+  display:       inline-block;
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  background:    var(--color-allowed, #22c55e);
+  animation:     livePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+.liveLabel {
+  font-family:    var(--font-mono, monospace);
+  font-size:      11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color:          var(--color-axis, #6b7280);
+}
+
+/* ── Stat pills row ──────────────────────────────────────────────────────────── */
+
+.statsRow {
+  display:   flex;
+  gap:       12px;
+  flex-wrap: wrap;
+}
+
+/* Individual pill — colour tint applied inline via CSS custom properties
+   set on the element so a single class works for both allowed and blocked. */
+
+.statPill {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            2px;
+  padding:        10px 20px;
+  min-width:      100px;
+  border-radius:  6px;
+
+  /* These two are set inline via style={{ '--pill-color': '...' }}   */
+  /* See the StatPill component in TrafficChart.tsx                   */
+  background:   color-mix(in srgb, var(--pill-color) 10%, transparent);
+  border:       1px solid color-mix(in srgb, var(--pill-color) 25%, transparent);
+}
+
+.statPillLabel {
+  font-family:    var(--font-mono, monospace);
+  font-size:      10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color:          var(--pill-color);
+}
+
+.statPillValue {
+  font-family: var(--font-mono, monospace);
+  font-size:   28px;
+  font-weight: 700;
+  color:       #f9fafb;
+  line-height: 1;
+}
+
+/* ── Footer note ─────────────────────────────────────────────────────────────── */
+
+.footer {
+  margin:         0;
+  font-family:    var(--font-mono, monospace);
+  font-size:      10px;
+  letter-spacing: 0.08em;
+  color:          var(--color-axis, #6b7280);
+}
+
+/* ── Recharts tooltip (rendered in a portal, so not truly scoped) ────────────── */
+/* We use a global class name here that the CustomTooltip JSX references directly. */
+/* This is the standard workaround for styling Recharts tooltip content.          */
+
+.tooltip {
+  background:    var(--color-surface, #0f1117);
+  border:        1px solid var(--color-grid, #ffffff14);
+  border-radius: 4px;
+  padding:       8px 12px;
+  font-family:   var(--font-mono, monospace);
+  font-size:     12px;
+  line-height:   1.8;
+  color:         #e5e7eb;
+}
+
+.tooltipTime {
+  color:         var(--color-axis, #6b7280);
+  margin-bottom: 4px;
+}
+
+.tooltipAllowed {
+  color: var(--color-allowed, #22c55e);
+}
+
+.tooltipBlocked {
+  color: var(--color-blocked, #ef4444);
+}

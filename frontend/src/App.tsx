@@ -1,16 +1,12 @@
-// App.tsx
-// The root React component. main.tsx mounts this into the DOM.
-// Right now it's a placeholder shell — we'll wire in the real
-// layout (header, traffic chart, client table) once those
-// components are built.
+import { TrafficChart } from './components/TrafficChart';
 
 function App() {
   return (
-    <div style={{ padding: '2rem', color: 'var(--color-text)' }}>
-      <h1>Rate Limiter Dashboard</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-        Setting up...
-      </p>
+    <div style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
+      <h1 style={{ color: 'var(--color-text)', marginBottom: '1.5rem' }}>
+        Rate Limiter Dashboard
+      </h1>
+      <TrafficChart clientId="test-client" />
     </div>
   );
 }
