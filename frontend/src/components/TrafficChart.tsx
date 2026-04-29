@@ -88,6 +88,9 @@ function LiveIndicator() {
 export function TrafficChart({ clientId }: TrafficChartProps) {
     const { data, allowed, blocked } = useTrafficPoller(clientId);
     const latestAllowed = data.length > 0 ? data[data.length - 1].isAllowed : true;
+
+    console.log('latestAllowed:', latestAllowed);
+    console.log('latest data point:', data[data.length - 1]);
     
     return (
     <div className={styles.card}>

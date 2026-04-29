@@ -1,19 +1,22 @@
 import type { ClientConfig, RateLimitCheckRequest, RateLimitCheckResponse, HealthResponse} from "../types";
 
-export async function checkRateLimit(request :RateLimitCheckRequest): Promise<RateLimitCheckResponse> {
-    const response = await fetch('api/rate-limit/check', {
-        method: "POST",
+export async function checkRateLimit(request: RateLimitCheckRequest): Promise<RateLimitCheckResponse> {
+    const response = await fetch('/api/rate-limit/check', {
+        method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+        'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
     });
 
-    if(!response.ok){
-        throw new Error(`Failed to fetch rate limit: ${response.status}`);
+    // Handle both 200 (allowed) and 429 (rate limited) as valid responses.
+    // Only throw on unexpected errors (500, network failures, etc.)
+    // A 429 is an expected business response, not an error.
+    if (response.status === 200 || response.status === 429) {
+        return response.json() as Promise<RateLimitCheckResponse>;
     }
 
-    return response.json() as Promise <RateLimitCheckResponse>;
+    throw new Error(`Unexpected error from rate limit check: ${response.status}`);
 }
 
 export async function getHealth(): Promise <HealthResponse> {

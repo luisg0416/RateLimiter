@@ -75,9 +75,11 @@ export function ClientFormModal({ isOpen, clientToEdit, onClose, onSaved }: Clie
         windowSeconds:       form.windowSeconds,
         refillRatePerSecond: form.refillRatePerSecond,
         isEnabled:           form.isEnabled,
-        createdAt:           clientToEdit?.createdAt ?? '',
-        updatedAt:           '',
-      };
+        // Send current time as a valid ISO 8601 string instead of empty string.
+        // The backend will overwrite createdAt on create anyway.
+        createdAt:           clientToEdit?.createdAt ?? new Date().toISOString(),
+        updatedAt:           new Date().toISOString(),
+        };
 
       if (clientToEdit) {
         await updateClient(config.clientId, config);
