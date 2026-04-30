@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/api/ratelimiterclient.ts","./src/components/clientformmodal.tsx","./src/components/clienttable.tsx","./src/components/demobutton.tsx","./src/components/trafficchart.tsx","./src/hooks/usetrafficpoller.ts","./src/types/index.ts"],"version":"5.8.3"}
