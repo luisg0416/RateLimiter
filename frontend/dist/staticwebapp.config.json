@@ -1,0 +1,21 @@
+{
+  "mimeTypes": {
+    ".js": "application/javascript",
+    ".mjs": "application/javascript",
+    ".css": "text/css",
+    ".svg": "image/svg+xml",
+    ".wasm": "application/wasm"
+  },
+  "routes": [
+    {
+      "route": "/assets/*",
+      "headers": {
+        "content-type": "application/javascript"
+      }
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*"]
+  }
+}
