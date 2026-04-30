@@ -5,6 +5,10 @@
 // Changes from Phase 1:
 //   - Bound RateLimitOptions to the "RateLimiting" config section
 //   - Registered SlidingWindowService with the DI container
+//
+// Changes from Phase 4:
+//   - Added ProductionCors policy for Azure Static Web Apps origin
+//   - CORS policy is selected based on the current environment
 
 using StackExchange.Redis;
 using RateLimiter.Api.Configuration;
@@ -33,7 +37,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 });
 
 // ----------------------------------------------------------------
-// ADDITION 1: Bind RateLimitOptions to the "RateLimiting" section
+// Bind RateLimitOptions to the "RateLimiting" section
 // in appsettings.json.
 //
 // After this line, any class that declares a constructor parameter
@@ -47,20 +51,10 @@ builder.Services.Configure<RateLimitOptions>(
 );
 
 // ----------------------------------------------------------------
-// ADDITION 2: Register SlidingWindowService with the DI container.
+// Register services with the DI container.
 //
 // Scoped means one instance is created per HTTP request and
 // disposed when the request ends.
-//
-// Why scoped and not singleton?
-// The service itself holds no state between requests — all state
-// lives in Redis. But scoped is safer than singleton here because
-// it avoids any accidental state leaking between requests if the
-// service ever grows. Singleton would also work functionally.
-//
-// Why not transient?
-// Transient creates a new instance every time it's requested within
-// the same request. Scoped is sufficient and slightly cheaper.
 //
 // Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection#service-lifetimes
 // ----------------------------------------------------------------
@@ -69,7 +63,7 @@ builder.Services.AddScoped<TokenBucketService>();
 builder.Services.AddScoped<ClientConfigService>();
 
 // ----------------------------------------------------------------
-// Standard ASP.NET Core setup — unchanged from Phase 1
+// Standard ASP.NET Core setup
 // ----------------------------------------------------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -83,12 +77,32 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// ----------------------------------------------------------------
+// CORS policies
+//
+// Two policies — one for local development, one for production.
+// The correct policy is selected in the middleware pipeline below
+// based on the current environment.
+//
+// DevelopmentCors — allows requests from the Vite dev server
+// ProductionCors  — allows requests from Azure Static Web Apps
+//
+// Reference: https://learn.microsoft.com/en-us/aspnet/core/security/cors
+// ----------------------------------------------------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevelopmentCors", policy =>
     {
         policy
             .WithOrigins("http://localhost:5173") // Vite default dev port
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
+    options.AddPolicy("ProductionCors", policy =>
+    {
+        policy
+            .WithOrigins("https://gentle-bush-034e0e40f.7.azurestaticapps.net")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -112,8 +126,12 @@ if (app.Environment.IsDevelopment())
 // 2. HTTPS       — redirect HTTP to HTTPS
 // 3. Auth        — placeholder for future auth middleware
 // 4. Controllers — route to the right controller action
+//
+// CORS policy is selected based on the current environment:
+// Development → DevelopmentCors (localhost:5173)
+// Production  → ProductionCors  (Azure Static Web Apps URL)
 // ----------------------------------------------------------------
-app.UseCors("DevelopmentCors");
+app.UseCors(app.Environment.IsDevelopment() ? "DevelopmentCors" : "ProductionCors");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
