@@ -9,9 +9,6 @@ export async function checkRateLimit(request: RateLimitCheckRequest): Promise<Ra
         body: JSON.stringify(request),
     });
 
-    // Handle both 200 (allowed) and 429 (rate limited) as valid responses.
-    // Only throw on unexpected errors (500, network failures, etc.)
-    // A 429 is an expected business response, not an error.
     if (response.status === 200 || response.status === 429) {
         return response.json() as Promise<RateLimitCheckResponse>;
     }

@@ -1,0 +1,76 @@
+name: Backend — Build & Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "docker-compose.yml"
+      - ".github/workflows/backend.yml"
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  CONTAINER_APP_NAME: ratelimiter-api
+  RESOURCE_GROUP: ratelimiter-rg
+  IMAGE_NAME: ratelimiter-api
+
+jobs:
+  build-and-deploy:
+    name: Build, push, deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
+        run: |
+          az acr login --name ${{ secrets.ACR_LOGIN_SERVER }}
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_TAG=${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}
+          SHORT_SHA=${GITHUB_SHA::7}
+
+          docker build \
+            --file src/RateLimiter.Api/Dockerfile \
+            --tag $IMAGE_TAG:$SHORT_SHA \
+            --tag $IMAGE_TAG:latest \
+            .
+
+          docker push $IMAGE_TAG:$SHORT_SHA
+          docker push $IMAGE_TAG:latest
+
+          # Save the short SHA so the deploy step can reference it.
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }} \
+            --set-env-vars \
+              "ASPNETCORE_ENVIRONMENT=Production" \
+              "Redis__ConnectionString=secretref:redis-connection-string"
+              
+      - name: Print app URL
+        run: |
+          az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" \
+            --output tsv
